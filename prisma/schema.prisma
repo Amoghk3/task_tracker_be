@@ -4,12 +4,94 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
+// =======================
+// MODELS
+// =======================
 
 model User {
   id        String   @id @default(uuid())
-  name      String
   email     String   @unique
   password  String
+  name      String?
   createdAt DateTime @default(now())
+
+  createdTasks  Task[]       @relation("CreatedTasks")
+  assignedTasks Task[]       @relation("AssignedTasks")
+  comments      Comment[]
+  attachments   Attachment[]
+  memberships   TeamMember[]
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+
+  members TeamMember[]
+  tasks   Task[]
+}
+
+model TeamMember {
+  id     String @id @default(uuid())
+  teamId String
+  userId String
+  role   String @default("member")
+
+  team Team @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  status      String    @default("todo")
+  priority    String    @default("medium")
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+
+  createdBy  String
+  assignedTo String?
+  teamId     String
+
+  team Team @relation(fields: [teamId], references: [id])
+
+  creator  User  @relation("CreatedTasks", fields: [createdBy], references: [id]) // 🔥 MATCH
+  assignee User? @relation("AssignedTasks", fields: [assignedTo], references: [id]) // 🔥 NEW
+
+  comments    Comment[]
+  attachments Attachment[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  body      String
+  createdAt DateTime @default(now())
+
+  userId String
+  taskId String
+
+  user User @relation(fields: [userId], references: [id])
+  task Task @relation(fields: [taskId], references: [id])
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  fileUrl   String
+  fileName  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  userId String
+  taskId String
+
+  user User @relation(fields: [userId], references: [id])
+  task Task @relation(fields: [taskId], references: [id])
 }
