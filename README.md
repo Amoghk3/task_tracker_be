@@ -84,7 +84,7 @@ prisma/
 ## 1. Clone Repository
 
 ```
-git clone 
+git clone https://github.com/Amoghk3/task_tracker_be.git
 cd task_tracker_be
 ```
 
